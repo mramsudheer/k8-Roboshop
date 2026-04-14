@@ -1,0 +1,107 @@
+apiVersion: v1
+kind: configMap
+metadata:
+  name: user
+  namespace: roboshop
+  labels:
+    project: roboshop
+    tier: backend
+    component: user
+data:
+  # This data section contains configuration keys and values.
+  # When referenced via 'envFrom' in a Deployment, each key becomes an
+  # Environment Variable name, and the value becomes the variable's value.
+  REDIS_URL: "redis://redis:6379"
+  MONGO_URL: "mongodb://mongodb:27017/user"
+  MONGO: "true"
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: user
+  namespace: roboshop
+  # these labels are replicaset labels
+  labels:
+    project: roboshop
+    tier: backend
+    component: user
+spec:
+  replicas: 1 # The ReplicaSet ensures that exactly '1' pod is running at all times
+  selector:
+  # using these labels replica set selects the pods to manage
+  # The ReplicaSet uses these labels to find and manage the pods it owns
+    matchLabels:
+      project: roboshop
+      tier: backend
+      component: user
+  # This is pod definition, pod is subset of replicaset
+  template:
+    metadata:
+    # Labels applied to the Pods. These must match the selector above.
+      labels:
+        project: roboshop
+        tier: backend
+        component: user
+    spec:
+      containers:
+      - name: user
+        image: mramsudheer/roboshop:user-1.1.0
+        imagePullPolicy: Always # safe to pull everytime, there may be images with same version rebuilt and pushed
+        resources:
+        # 'requests' is what the pod is guaranteed; 'limits' is the max it can use.
+        # Keeping them equal creates a 'Guaranteed' Quality of Service (QoS) class.
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+        readinessProbe:
+        # Determines if the pod is ready to accept traffic.
+        # Here we check if the TCP port 8080 is open.
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          failureThreshold: 2
+        livenessProbe:
+        # Determines if the container is still healthy. If this fails, 
+        # Kubernetes will kill the container and restart it.
+          httpGet:
+            path: /health
+            port: 8080
+          periodSeconds: 10
+          failureThreshold: 2
+        # This section injects ALL keys from the 'user' ConfigMap 
+        # as Environment Variables into this container
+
+        # 'envFrom' is used here to mount the ConfigMap as Environment Variables.
+        # This will take every key defined in the 'user' ConfigMap and 
+        # inject it directly into the container's environment. For example, 
+        # a variable named MONGO_URL will be available to the application code.
+        envFrom:
+        - configMapRef:
+            name: user
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user
+  namespace: roboshop
+  labels:
+    project: roboshop
+    tier: backend
+    component: user
+spec:
+# The service uses this selector to find the active pods created by the 
+# deployment and load balance traffic between them.
+  selector:
+  # labels are used as selectors to select the pods to 
+  # which this service will route the traffic
+    project: roboshop
+    tier: backend
+    component: user
+  ports:
+  - protocol: TCP
+    port: 8080 # service port
+    targetPort: 8080 # container port

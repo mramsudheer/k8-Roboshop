@@ -1,0 +1,102 @@
+https://github.com/mramsudheer/k8-Roboshop.git
+git diff --stat origin/main main
+
+IF YOU ARE UNABE TO SEE THE LATEST CHANGES AFTER GIT pull
+git fetch origin
+git reset --hard origin/main
+
+# DISK RESIZE
+
+df -hT
+vgs - To see total Unallocated space
+lvs - Each partition size
+lsblk
+sudo growpart /dev/nvme0n1 4
+sudo lvextend -L +30G /dev/RootVG/varVol
+sudo xfs_growfs /
+sudo xfs_growfs /var
+#----------------------------------------------------------------------------
+
+# DOCKER INSTALLATION
+
+sudo dnf -y install dnf-plugins-core
+sudo dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
+sudo dnf install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker ec2-user
+logout and login again
+
+#TO DOWNLOAD THE CORRECT VERSION OF EKSCTL (THE OFFICIAL CLI FOR AMAZON EKS)
+FOR YOUR SPECIFIC OS AND PROCESSOR
+
+# for ARM systems, set ARCH to: `arm64`, `armv6` or `armv7`
+ARCH=amd64
+PLATFORM=$(uname -s)_$ARCH
+curl -sLO "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$PLATFORM.tar.gz"
+
+# (Optional) Verify checksum
+curl -sL "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_checksums.txt" | grep $PLATFORM | sha256sum --check
+tar -xzf eksctl_$PLATFORM.tar.gz -C /tmp && rm eksctl_$PLATFORM.tar.gz
+sudo install -m 0755 /tmp/eksctl /usr/local/bin && rm /tmp/eksctl
+eksctl version
+
+# INSTALLING KUBECTL
+curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.35.2/2026-02-27/bin/linux/amd64/kubectl
+chmod +x ./kubectl
+mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$HOME/bin:$PATH
+
+kubectl version --client
+aws sts get-caller-identity
+
+# TO CREATE THE EKS CLUSTER
+eksctl create cluster -f eks.yaml
+
+eksctl get cluster
+kubectl get nodes
+
+kubectl apply -f 01-namespace.yaml
+kubectl describe namespace roboshop
+
+#Install the Identity Agent
+eksctl create addon --name eks-pod-identity-agent --cluster roboshop
+
+#Associate the Policy
+eksctl create podidentityassociation \
+  --cluster roboshop \
+  --namespace kube-system \
+  --service-account-name aws-node \
+  --permission-policy-arns arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+
+kubectl apply -f 02-pod.yaml -n roboshop
+kubectl get pods -n roboshop
+kubectl get pods -n roboshop -o wide
+kubectl describe pod nginx -n roboshop
+
+kubectl config set-context --current --namespace=roboshop
+# Now you can just type: kubectl get pods
+
+kubectl delete pod nginx -n roboshop
+
+kubectl exec -it nginx -n roboshop -- curl localhost:80
+
+kubectl label pod nginx project=roboshop -n roboshop
+kubectl expose pod nginx --type=LoadBalancer --port=80 --target-port=80 -n roboshop
+kubectl get svc nginx -n roboshop
+
+
+eksctl delete cluster --name roboshop --region us-east-1
+
+To authenticate the cluster:
+aws eks update-kubeconfig --region us-east-1 --name roboshop
+
+TO GET THE NODES:
+kubectl get nodes
+
+TO ACCIGN THE LABELS:
+kubectl label nodes <node-name> project=roboshop
+
+TO SEE THE NODE LABELS
+kubectl get nodes --show-labels
+
+

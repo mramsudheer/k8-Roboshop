@@ -84,19 +84,18 @@ kubectl label pod nginx project=roboshop -n roboshop
 kubectl expose pod nginx --type=LoadBalancer --port=80 --target-port=80 -n roboshop
 kubectl get svc nginx -n roboshop
 
-
 eksctl delete cluster --name roboshop --region us-east-1
 
-To authenticate the cluster:
+# To authenticate the cluster:
 aws eks update-kubeconfig --region us-east-1 --name roboshop
 
-TO GET THE NODES:
+# TO GET THE NODES:
 kubectl get nodes
 
-TO ACCIGN THE LABELS:
+# TO ACCIGN THE LABELS:
 kubectl label nodes <node-name> project=roboshop
 
-TO SEE THE NODE LABELS
+# TO SEE THE NODE LABELS
 kubectl get nodes --show-labels
 
 

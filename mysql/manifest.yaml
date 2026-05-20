@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: roboshop
+  # these labels are ReplicaSet labels
+  labels:
+    project: roboshop
+    tier: db
+    component: mysql
+spec:
+  replicas: 1
+  selector:
+    # using these labels ReplicaSet selects the pod
+    matchLabels:
+      project: roboshop
+      tier: db
+      component: mysql
+  # This is pod definition, pod is subset of ReplicaSet
+  template:
+    metadata:
+      labels:
+        project: roboshop
+        tier: db
+        component: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mramsudheer/roboshop:mysql-1.0.0
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: roboshop
+  labels:
+    project: roboshop
+    tier: db
+    component: mysql
+spec:
+  selector:
+    # labels are used as selectors
+    project: roboshop
+    tier: db
+    component: mysql
+  ports:
+  - protocol: TCP
+    port: 3306 # servie port
+    targetPort: 3306 # container port

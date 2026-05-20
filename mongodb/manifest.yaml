@@ -3,21 +3,24 @@ kind: Deployment
 metadata:
   name: mongodb
   namespace: roboshop
+  # these labels are ReplicaSet labels
   labels:
     project: roboshop
     tier: db
     component: mongodb
 spec:
-  replicas: 1
+  replicas: 1 # The ReplicaSet ensures that exactly '1' pod is running at all times
   selector:
-    # using these labels replica set selects the pods to manage
+    # using these labels ReplicaSet selects the pods to manage
+    # The ReplicaSet uses these labels to find and manage the pods it owns
     matchLabels:
       project: roboshop
       tier: db
       component: mongodb
-  # This is pod definition, pod is subset of replicaset
+  # This is pod definition, pod is subset of ReplicaSet
   template:
     metadata:
+      # Labels applied to the Pods. These must match the selector above.
       labels:
         project: roboshop
         tier: db

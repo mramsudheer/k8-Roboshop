@@ -1,5 +1,5 @@
 # Kubernetes Architecture <br>
-![Acrhitecture Diagram](Architecture.jpg)
+![Acrhitecture Diagram](images/Architecture.jpg)
 **Core Architecture Components Explained** <br>
 **1.&emsp; Control Plane (Master Node) Components**<br>
 •&emsp;`kube-apiserver:` The front end for the control plane. It processes all inner and outer requests, intercepts traffic, and verifies permissions before modifying the cluster state. <br>
@@ -12,7 +12,7 @@
 •&emsp;`kube-proxy:` A network agent running on each node that maintains network rules on host operating systems. It allows network communication to your pods from inside or outside the cluster.<br>
 •&emsp;`Container Runtime:` The underlying software engine responsible for actually running the isolated container processes (e.g., containerd, CRI-O, or Docker Engine).<br>
 # Master Node <br>
-![MasterNode Diagram](MasterNode.jpg)
+![MasterNode Diagram](images/MasterNode.jpg)
 **Control Plane Roles Relative to Namespaces** <br>
 •&emsp;`kube-apiserver:` The absolute gatekeeper. Every single `kubectl` request passes here first. When you query a specific namespace, it evaluates your authorization permissions against that unique logical boundary before processing the request.<br>
 •&emsp;`etcd:` The single source of truth database. It holds the ultimate structural state configuration for the entire system, mapping exactly which namespace tag belongs to each individual resource definition.<br>
@@ -59,10 +59,10 @@ spec:
 
 ```
 # Name Space <br>
-![Name Space Diagram](NameSpace1.jpg)
+![Name Space Diagram](images/NameSpace1.jpg)
 # NameSpace Shared Infra <br>
-![Name Space shared Infra Diagram](NameSpace_SharedInfra.jpg)
-![Name Space shared Infra Diagram](NameSpace_SharedInfra2.jpg)
+![Name Space shared Infra Diagram](images/NameSpace_SharedInfra.jpg)
+![Name Space shared Infra Diagram](images/NameSpace_SharedInfra2.jpg)
 **Kubernetes Networking** <br>
 <https://medium.com/@h.stoychev87/kubernetes-networking-a-deep-dive-6081d794e97c> <br>
 we’ll walk through the Kubernetes networking model, explore how traffic flows within and outside the cluster, break down key components like Services, CNI plugins, Ingress, network policies, kube-proxy modes, and finish with practical troubleshooting and exam tips. <br>

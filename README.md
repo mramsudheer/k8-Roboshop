@@ -123,9 +123,9 @@ kubernetes_node:
               protocol: "HTTP"
               description: "Sends GET / requests over the loopback interface"
 ```
-The BusyBox sidecar continuously sends traffic to the Nginx container using `localhost:80.` <br>
+> 📌 **NOTE:**The BusyBox sidecar continuously sends traffic to the Nginx container using `localhost:80.` <br>
 ![Name Space shared Infra Diagram](images/Container2ContainerNetwork.jpg)
-Explanation <br>
+Explanation: <br>
 Inside every Kubernetes Pod, and on the host node, you will find several key network interfaces. Each one has a specific purpose in how Pods communicate internally and externally.<br>
 
 Below is an explanation of each:<br>
@@ -137,3 +137,50 @@ The loopback interface is a virtual network interface inside the Pod.<br>
 •&emsp;Allows containers inside the Pod to communicate using localhost (127.0.0.1)<br>
 •&emsp;Used for container-to-container communication within the same Pod<br>
 •&emsp;Exists in every Linux network namespace<br>
+> 📌 **NOTE:**Anything listening on `127.0.0.1` inside a Pod is accessible only to containers in that same Pod. <br><br>
+>> Pod Interface (eth0)<br>
+
+The main network interface inside the Pod.<br>
+Every Pod gets one IP address, and that IP is assigned to its eth0 interface.<br>
+
+&emsp;•&emsp;Sends/receives traffic between Pods <br>
+&emsp;•&emsp;Communicates with Services, DNS, and external networks<br>
+&emsp;•&emsp;Source IP for all traffic leaving the Pod<br><br>
+📌 `eth0` holds the Pod IP (e.g., 10.244.1.5).<br>
+
+>> VETH Pair (Virtual Ethernet Pair) <br>
+
+A veth pair is like a virtual cable with two ends:<br>
+
+&emsp;•&emsp;One end stays inside the Pod<br>
+&emsp;•&emsp;One end stays on the host (node)<br><br>
+📌 It is used to connect the Pod’s network namespace to the host networking system.<br>
+
+Kubernetes CNIs (Calico, Flannel, Cilium, etc.) rely on veth pairs to plug Pods into the cluster network. <br>
+
+>> VETH_P — Pod-Side VETH Interface<br>
+
+The Pod-side end of a veth pair.<br>
+
+&emsp;•&emsp;Connects the Pod to the host<br>
+&emsp;•&emsp;Passes traffic from the Pod to the host networking stack<br>
+&emsp;•&emsp;Usually named something like `eth0@if123` or similar internally<br><br>
+📌 Inside the Pod, traffic exits via `eth0`, but this physically maps to the Pod-side veth interface.<br>
+
+>> VETH_H — Host-Side VETH Interface<br>
+
+The host/node side of the veth pair.<br>
+
+&emsp;•&emsp;Bridges the Pod’s traffic to the CNI plugin (e.g., cni0 bridge)<br>
+&emsp;•&emsp;Participates in the node’s routing and CNI overlays<br>
+&emsp;•&emsp;Connects Pods to each other across nodes<br>
+📌 This is where the Pod attaches to the node network.<br><br>
+Its traffic then goes to the CNI bridge (`cni0` or `flannel.1`, etc.) depending on your CNI. <br><br>
+Summary
+| **Component** | **Location** | **Purpose** | **Example** |
+| :--- | :--- | :--- | :--- |
+| **lo (loopback)** | Inside Pod |	localhost connectivity between containers |	127.0.0.1 |
+| **eth0** | Inside Pod |	Pod’s main network interface |	10.244.1.5 |
+| **VETH_P** |	Pod | Pod-side end of veth pair | Connects to host |
+| **VETH_H** |	Host |	Host-side end of veth pair | Connects to CNI bridge |
+

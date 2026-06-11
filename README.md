@@ -89,3 +89,38 @@ Kubernetes networking addresses four concerns:<br>
 •&emsp;`Shared Network Namespace:` Containers within the same pod share the same network namespace, meaning they can communicate with each other via localhost and share the same IP address and port space. <br>
 •&emsp;`Inter-Process Communication (IPC):` Containers in a pod can use standard IPC mechanisms like SystemV semaphores or POSIX shared memory to communicate.<br>
 •&emsp;`Shared Volumes:` Containers in the same pod can also communicate by reading and writing to shared volumes.<br>
+Example:<br>
+```hcl
+kubernetes_node:
+  name: "node-1"
+  components:
+    pod:
+      name: "example-pod"
+      ip: "10.244.1.5"
+      network_namespace:
+        interfaces:
+          loopback:
+            name: "lo"
+            ip: "127.0.0.1"
+            purpose: "Container-to-container localhost communication"
+          ethernet:
+            name: "eth0"
+            ip: "10.244.1.5"
+            purpose: "Pod network interface for all external communication"
+        containers:
+          - name: "container-1"
+            role: "application"
+            image: "nginx"
+            listens_on:
+              interface: "lo"
+              port: 80
+          - name: "container-2"
+            role: "sidecar"
+            action: "curl localhost:80"
+            connects_to:
+              target: "container-1"
+              via: "127.0.0.1"
+              protocol: "HTTP"
+              description: "Sends GET / requests over the loopback interface"
+```
+The BusyBox sidecar continuously sends traffic to the Nginx container using `localhost:80.`

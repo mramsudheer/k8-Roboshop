@@ -288,9 +288,28 @@ Container(s) inside Pod
           Node Network → other nodes → remote Pod
 ```
 **5.&emsp;Communication Type: Pod-to-Service**<br>
-![pod_to_service Diagram](images/pod_to_service.jpg)
 Because Pods are ephemeral, Services provide a stable virtual IP (ClusterIP).<br>
+![pod_to_service Diagram](images/pod_to_service.jpg)
+&emsp;**How it works:** <br>
 
+&emsp;1.&emsp;A client Pod resolves my-service via DNS → gets ClusterIP.<br>
+&emsp;2.&emsp;Traffic is sent to the ClusterIP.<br>
+&emsp;3.&emsp;kube-proxy intercepts and rewrites the packet to a real Pod IP.<br>
+&emsp;4.&emsp;The packet reaches the backend Pod.<br>
+&emsp;5.&emsp;Response is returned transparently.<br>
+Summary Diagram <br>
+```hcl
+Client Pod
+   |
+   |  curl my-service → ClusterIP (virtual IP)
+                     ↕
+                  kube-proxy
+                     ↕
+          Load-balancing & DNAT to backend Pod IPs
+                     ↕
+           Backend Pod(s) (real Pod IPs)
+```
+This keeps Pod-to-Service communication simple for applications: Pods just use a single, stable IP, while kube-proxy handles the routing and load balancing behind the scenes.<br>
 Example:<br>
 ```hcl
 # ---------------------------

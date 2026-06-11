@@ -844,6 +844,7 @@ Health probes ensure traffic is only sent to healthy nodes running the Ingress C
 &emsp;4.&emsp; Service-to-Pod routing:<br>
 The Ingress Controller forwards traffic to the target Service.<br>
 >> Optional nuance:<br>
+
 &emsp;.&emsp;kube-proxy on the nodes usually handles routing traffic from the Service to one of its Pods.<br>
 &emsp;However, some Ingress Controller implementations can bypass kube-proxy and directly reach Pod endpoints (e.g., via IPVS mode or direct endpoint resolution), improving efficiency.<br><br>
 5. Pod processing:<br>

@@ -77,3 +77,11 @@ This creates a flat, routable L3 network in which each Pod is a first-class netw
 •&emsp;Applications can communicate using standard IPs; no port translation is needed. <br>
 •&emsp;Simplifies microservices communication.<br>
 •&emsp;Enables network policies to be applied at the Pod level.<br>
+**2.&emsp;The Five Types of Kubernetes Networking<br>**
+Kubernetes networking addresses four concerns:<br>
+
+1.&emsp;Container-to-Container Networking <br>
+2.&emsp;Pod-to-Pod Networking<br>
+3.&emsp;Pod-to-Service Networking<br>
+4.&emsp;External/Internet-to-Service Networking (Ingress)<br>
+5.&emsp;Pod-to-External Networking (Egress)<br>

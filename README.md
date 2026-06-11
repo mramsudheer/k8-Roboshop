@@ -63,3 +63,17 @@ spec:
 # NameSpace Shared Infra <br>
 ![Name Space shared Infra Diagram](NameSpace_SharedInfra.jpg)
 ![Name Space shared Infra Diagram](NameSpace_SharedInfra2.jpg)
+**Kubernetes Networking** <br>
+<https://medium.com/@h.stoychev87/kubernetes-networking-a-deep-dive-6081d794e97c> <br>
+we’ll walk through the Kubernetes networking model, explore how traffic flows within and outside the cluster, break down key components like Services, CNI plugins, Ingress, network policies, kube-proxy modes, and finish with practical troubleshooting and exam tips. <br>
+**The Kubernetes Networking Model** <br>
+Kubernetes enforces three foundational networking principles:<br>
+
+1.&emsp;Pod-to-Pod Communication: Every Pod can communicate directly with any other Pod across nodes, without NAT.<br>
+2.&emsp;Node-to-Pod Communication: Nodes can reach every Pod, and Pods can reach nodes, also without NAT.<br>
+3.&emsp;Pod IP Consistency: A Pod’s self-IP is identical to what other Pods see externally.<br>
+This creates a flat, routable L3 network in which each Pod is a first-class network entity.<br>
+
+•&emsp;Applications can communicate using standard IPs; no port translation is needed. <br>
+•&emsp;Simplifies microservices communication.<br>
+•&emsp;Enables network policies to be applied at the Pod level.<br>

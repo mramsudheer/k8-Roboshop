@@ -65,8 +65,8 @@ spec:
 ![Name Space shared Infra Diagram](images/NameSpace_SharedInfra2.jpg)
 **Kubernetes Networking** <br>
 <https://medium.com/@h.stoychev87/kubernetes-networking-a-deep-dive-6081d794e97c> <br>
-we’ll walk through the Kubernetes networking model, explore how traffic flows within and outside the cluster, break down key components like Services, CNI plugins, Ingress, network policies, kube-proxy modes, and finish with practical troubleshooting and exam tips. <br>
-**The Kubernetes Networking Model** <br>
+we’ll walk through the Kubernetes networking model, explore how traffic flows within and outside the cluster, break down key components like Services, CNI plugins, Ingress, network policies, kube-proxy modes, and finish with practical troubleshooting and exam tips. <br><br>
+**The Kubernetes Networking Model** <br><br>
 Kubernetes enforces three foundational networking principles:<br>
 
 1.&emsp;Pod-to-Pod Communication: Every Pod can communicate directly with any other Pod across nodes, without NAT.<br>
@@ -76,12 +76,16 @@ This creates a flat, routable L3 network in which each Pod is a first-class netw
 
 •&emsp;Applications can communicate using standard IPs; no port translation is needed. <br>
 •&emsp;Simplifies microservices communication.<br>
-•&emsp;Enables network policies to be applied at the Pod level.<br>
-**2.&emsp;The Five Types of Kubernetes Networking<br>**
+•&emsp;Enables network policies to be applied at the Pod level.<br><br>
+**2.&emsp;The Five Types of Kubernetes Networking**<br><br>
 Kubernetes networking addresses four concerns:<br>
 
 1.&emsp;Container-to-Container Networking <br>
 2.&emsp;Pod-to-Pod Networking<br>
 3.&emsp;Pod-to-Service Networking<br>
 4.&emsp;External/Internet-to-Service Networking (Ingress)<br>
-5.&emsp;Pod-to-External Networking (Egress)<br>
+5.&emsp;Pod-to-External Networking (Egress)<br><br>
+**3.&emsp;Communication Type: Container-to-Container (Inside a Pod)** <br>
+•&emsp;`Shared Network Namespace:` Containers within the same pod share the same network namespace, meaning they can communicate with each other via localhost and share the same IP address and port space. <br>
+•&emsp;`Inter-Process Communication (IPC):` Containers in a pod can use standard IPC mechanisms like SystemV semaphores or POSIX shared memory to communicate.<br>
+•&emsp;`Shared Volumes:` Containers in the same pod can also communicate by reading and writing to shared volumes.<br>

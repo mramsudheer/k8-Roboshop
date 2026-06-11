@@ -71,7 +71,7 @@ Kubernetes enforces three foundational networking principles:<br>
 
 1.&emsp;Pod-to-Pod Communication: Every Pod can communicate directly with any other Pod across nodes, without NAT.<br>
 2.&emsp;Node-to-Pod Communication: Nodes can reach every Pod, and Pods can reach nodes, also without NAT.<br>
-3.&emsp;Pod IP Consistency: A Pod’s self-IP is identical to what other Pods see externally.<br>
+3.&emsp;Pod IP Consistency: A Pod’s self-IP is identical to what other Pods see externally.<br> <br>
 This creates a flat, routable L3 network in which each Pod is a first-class network entity.<br>
 
 •&emsp;Applications can communicate using standard IPs; no port translation is needed. <br>
@@ -123,7 +123,7 @@ kubernetes_node:
               protocol: "HTTP"
               description: "Sends GET / requests over the loopback interface"
 ```
-> 📌 **NOTE:**The BusyBox sidecar continuously sends traffic to the Nginx container using `localhost:80.` <br>
+> 📌 NOTE:The BusyBox sidecar continuously sends traffic to the Nginx container using `localhost:80.` <br>
 ![Name Space shared Infra Diagram](images/Container2ContainerNetwork.jpg)
 Explanation: <br>
 Inside every Kubernetes Pod, and on the host node, you will find several key network interfaces. Each one has a specific purpose in how Pods communicate internally and externally.<br>
@@ -137,7 +137,7 @@ The loopback interface is a virtual network interface inside the Pod.<br>
 •&emsp;Allows containers inside the Pod to communicate using localhost (127.0.0.1)<br>
 •&emsp;Used for container-to-container communication within the same Pod<br>
 •&emsp;Exists in every Linux network namespace<br>
-> 📌 **NOTE:**Anything listening on `127.0.0.1` inside a Pod is accessible only to containers in that same Pod. <br><br>
+> 📌 NOTE: Anything listening on `127.0.0.1` inside a Pod is accessible only to containers in that same Pod. <br><br>
 >> Pod Interface (eth0)<br>
 
 The main network interface inside the Pod.<br>
@@ -184,3 +184,130 @@ Summary
 | **VETH_P** |	Pod | Pod-side end of veth pair | Connects to host |
 | **VETH_H** |	Host |	Host-side end of veth pair | Connects to CNI bridge |
 
+```hcl
+Container(s) inside Pod
+   |
+   |  localhost ↔ lo (127.0.0.1)
+   |
+   |  external traffic ↔ eth0 (Pod IP)
+                     ↕
+                VETH_P (Pod end)
+                     ↕
+                VETH_H (Host end)
+                     ↕
+                  cni0 (bridge)
+```
+**4. Communication Type: Pod-to-Pod** <br><br>
+
+&emsp;**IP-Per-Pod Model** <br> <br>
+![Pod2PodNetwork Diagram](images/Pod2PodNetwork.jpg)
+Each pod in Kubernetes is assigned a unique IP address, allowing direct communication between pods without the need for *Network Address Translation (NAT)*. This simplifies networking and ensures that pods can easily find and talk to each other across the cluster. <br><br>
+&emsp;**Kube-proxy** <br> <br>
+![kube-proxy Diagram](images/kube-proxy.jpg)
+<br>This component runs on each node and manages network rules to allow communication between pods. It handles routing and load balancing for services within the cluster.<br><br>
+&emsp;•&emsp;Watches the Kubernetes API server for changes to Services and Endpoints<br>
+&emsp;•&emsp;Updates network rules (iptables, IPVS, or nftables) on each node to route traffic correctly<br>
+&emsp;•&emsp;Load balances traffic across the pods backing a Service<br>
+&emsp;•&emsp;Maintains the virtual IP (ClusterIP) routing so traffic to a Service IP reaches the right pods<br><br>
+When you create a Service, kube-proxy ensures that traffic sent to the Service’s ClusterIP gets forwarded to one of the healthy pod IPs behind it. It doesn’t actually proxy the traffic itself in most modes — it sets up rules so the kernel handles the routing directly.<br>
+
+**Three modes:**<br>
+
+&emsp;1.&emsp;iptables mode (most common, still widely used) — Uses iptables rules for routing<br>
+&emsp;2.&emsp;IPVS mode — Uses IPVS for better performance with many Services<br>
+&emsp;3.&emsp;userspace mode (legacy) — Actually proxies connections in userspace
+&emsp;**Тerminology explanation**<br><br>
+>> cni0 Bridge<br>
+
+The A `cni0` bridge is a virtual network bridge on the host node.<br>
+
+&emsp;•&emsp;Acts like a virtual switch connecting all Pods on the same node.<br>
+&emsp;•&emsp;Receives traffic from the host-side veth interface (VETH_H) of each Pod.<br>
+&emsp;•&emsp;Allows same-node Pod-to-Pod communication at Layer 2 (no routing needed).<br>
+&emsp;•&emsp;Connects to the node routing system for cross-node traffic.<br><br>
+📌 *Think of it as the local hub where Pods “plug in” to communicate with each other or reach the node network.*<br>
+
+>> CNI Overlay (VXLAN/IPIP)<br>
+
+When Pods on different nodes need to talk, traffic leaves the cni0 bridge and is encapsulated by the CNI overlay:<br>
+
+&emsp;•&emsp;VXLAN or IPIP wraps the Pod-to-Pod packet inside a new outer packet.<br>
+&emsp;•&emsp;Outer IP addresses are the node IPs, inner IP addresses are the Pod IPs.<br>
+&emsp;•&emsp;Sent over the physical network between nodes.<br>
+&emsp;•&emsp;Decapsulated on the destination node and delivered to the target Pod via that node’s bridge.<br><br>
+📌 *This is how Kubernetes achieves a flat, cluster-wide network, making all Pod IPs reachable across nodes.*<br>
+
+>> Routing Table<br>
+
+Every node has a routing table that decides where packets go:<br><br>
+&emsp;•&emsp;Determines whether a Pod IP is local (on the same node) or remote (on another node).<br>
+&emsp;•&emsp;Local Pod traffic is sent directly via the cni0 bridge.<br>
+&emsp;•&emsp;Remote Pod traffic is sent to the CNI overlay interface (e.g., tunl0 or VXLAN).<br>
+&emsp;•&emsp;Ensures packets are properly encapsulated and routed to the destination node.<br><br>
+📌 *The routing table is what makes Kubernetes networking transparent to Pods — a Pod only sees a flat IP space, even if its peer is on another node.* <br>
+
+>> iptables<br>
+
+The legacy mechanism kube-proxy uses to implement Kubernetes Services.<br><br>
+
+&emsp;•&emsp;Programs a large set of firewall rules in the Linux kernel.<br>
+&emsp;•&emsp;Uses NAT (masquerading) and DNAT to redirect Service IPs (ClusterIPs) to backend Pod IPs.<br>
+&emsp;•&emsp;Works by evaluating rules sequentially, which can become slow at scale.<br>
+&emsp;•&emsp;Handles connection tracking to ensure packets of the same flow always reach the same Pod.<br>
+&emsp;•&emsp;Used by default in many older Kubernetes setups.<br><br>
+Think of `iptables` as a long chain of "if-this-then-that" traffic rules.<br>
+Powerful, but as the cluster grows, the rule list becomes huge — and that slows things down.<br><br>
+
+>> IPVS<br>
+
+A faster, more scalable alternative to iptables for kube-proxy.<br><br>
+
+&emsp;•&emsp;Implements L4 load balancing directly in the Linux kernel.<br>
+&emsp;•&emsp;Uses hashed or round-robin algorithms to distribute traffic across Pods.<br>
+&emsp;•&emsp;Builds a dedicated load-balancing table instead of long sequential rule lists.<br>
+&emsp;•&emsp;More efficient for large clusters with many Services and Endpoints.<br>
+&emsp;•&emsp;Supports health checking and connection persistence.<br><br>
+Think of `IPVS` as a purpose-built, kernel-level load balancer:<br>
+&emsp;•&emsp;Fast lookups, smarter algorithms, and far more efficient than traversing thousands of iptables rules.<br>
+&emsp;**Summary Diagram** <br>
+```hcl
+Container(s) inside Pod
+   |
+   |  localhost ↔ lo (127.0.0.1)
+   |
+   |  external traffic ↔ eth0 (Pod IP)
+                     ↕
+                VETH_P (Pod-side)
+                     ↕
+                VETH_H (Host-side)
+                     ↕
+                  cni0 (bridge)
+                     ↕
+         Routing Table + Overlay (VXLAN/IPIP)
+                     ↕
+          Node Network → other nodes → remote Pod
+```
+**5.&emsp;Communication Type: Pod-to-Service**<br>
+![pod_to_service Diagram](images/pod_to_service.jpg)
+Because Pods are ephemeral, Services provide a stable virtual IP (ClusterIP).<br>
+
+Example:<br>
+```hcl
+# ---------------------------
+# Service
+# ---------------------------
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  selector:
+    app: backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: ClusterIP
+  clusterIP: 10.96.0.100
+```

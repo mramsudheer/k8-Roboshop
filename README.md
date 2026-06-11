@@ -664,7 +664,7 @@ Kubernetes uses CoreDNS for service discovery and service mesh integration. Core
 &emsp;8.&emsp; Return DNS Response: CoreDNS returns the answer through the `kube-dns` Service.<br>
 &emsp;9.&emsp; Returned to Pod: The Pod receives the DNS answer and then connects to the resolved Service IP.<br><br>
 **Practical Troubleshooting Commands**<br>
-&emsp;.&emsp;Use nslookup/dig in debug pods to troubleshoot<br>
+&emsp;•&emsp;Use nslookup/dig in debug pods to troubleshoot<br>
 CoreDNS Troubleshooting:<br>
 ```hcl
     kubectl get pods -n kube-system -l k8s-app=kube-dns
@@ -836,18 +836,18 @@ Here’s a short overview explaining how end-to-end traffic flows in a Kubernete
 &emsp;1.&emsp; DNS resolution:<br>
 &emsp;&emsp;`myapp.com resolves to a public IP`. <br>
 &emsp;2.&emsp; Cloud Load Balancer:<br>
-&emsp;.&emsp;The public IP belongs to a cloud load balancer (e.g., Azure Load Balancer) created by a Service of type LoadBalancer.<br>
-&emsp;.&emsp;The LB forwards incoming traffic to the Ingress Controller Pods running in the cluster.
+&emsp;•&emsp;The public IP belongs to a cloud load balancer (e.g., Azure Load Balancer) created by a Service of type LoadBalancer.<br>
+&emsp;•&emsp;The LB forwards incoming traffic to the Ingress Controller Pods running in the cluster.
 Health probes ensure traffic is only sent to healthy nodes running the Ingress Controller.<br><br>
 &emsp;3.&emsp; Ingress Controller / Gateway:<br>
-&emsp;.&emsp;The Ingress Controller inspects the HTTP(S) request, matches it against Ingress rules (host/path), and determines the target Kubernetes Service.<br><br>
+&emsp;•&emsp;The Ingress Controller inspects the HTTP(S) request, matches it against Ingress rules (host/path), and determines the target Kubernetes Service.<br><br>
 &emsp;4.&emsp; Service-to-Pod routing:<br>
 The Ingress Controller forwards traffic to the target Service.<br>
 >> Optional nuance:<br>
 
-&emsp;.&emsp;kube-proxy on the nodes usually handles routing traffic from the Service to one of its Pods.<br>
-&emsp;However, some Ingress Controller implementations can bypass kube-proxy and directly reach Pod endpoints (e.g., via IPVS mode or direct endpoint resolution), improving efficiency.<br><br>
+&emsp;•&emsp;kube-proxy on the nodes usually handles routing traffic from the Service to one of its Pods.<br>
+&emsp;•&emsp;However, some Ingress Controller implementations can bypass kube-proxy and directly reach Pod endpoints (e.g., via IPVS mode or direct endpoint resolution), improving efficiency.<br><br>
 5. Pod processing:<br>
-&emsp;.&emsp;The Pod receives the request, processes it, and generates the response.<br>
+&emsp;•&emsp;The Pod receives the request, processes it, and generates the response.<br>
 6. Response path:<br>
-&emsp;.&emsp;The response travels back through the same path: Pod → Service → Ingress Controller → cloud LB → client.
+&emsp;•&emsp;The response travels back through the same path: Pod → Service → Ingress Controller → cloud LB → client.

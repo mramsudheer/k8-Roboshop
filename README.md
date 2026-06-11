@@ -287,8 +287,8 @@ Container(s) inside Pod
                      ↕
           Node Network → other nodes → remote Pod
 ```
-**5.&emsp;Communication Type: Pod-to-Service**<br>
-Because Pods are ephemeral, Services provide a stable virtual IP (ClusterIP).<br>
+**5.&emsp;Communication Type: Pod-to-Service**<br><br>
+Because Pods are ephemeral, Services provide a stable virtual IP (ClusterIP).<br><br>
 ![pod_to_service Diagram](images/pod_to_service.jpg)
 &emsp;**How it works:** <br>
 
@@ -338,7 +338,7 @@ Pods in Kubernetes are ephemeral — they can be created, destroyed, or replaced
 ![services Diagram](images/services.jpg)<br>
 Service types define how the service is exposed, as detailed in the official Kubernetes Service documentation.<br><br>
 Explanation:<br>
-&emsp;•&emsp;Service is an API resource: It exists in the Kubernetes API as a definable object that you can `kubectl apply, `kubectl get`, or manage via the API server.<br><br>
+&emsp;•&emsp;Service is an API resource: It exists in the Kubernetes API as a definable object that you can `kubectl apply`, `kubectl get`, or manage via the API server.<br><br>
 &emsp;•&emsp;Service is also an object: When created, it becomes an actual object in etcd, and the Kubernetes control plane manages its lifecycle.<br><br>
 So you can think of it as an API resource that represents a Service object in the cluster.<br><br>
 &emsp;`kubectl get service my-service` <br>
@@ -363,9 +363,9 @@ spec:
 **Stable Cluster IP — ClusterIP:**<br>
 
 &emsp;•&emsp;Each Service gets a fixed IP (ClusterIP) inside the cluster, which does not change, even if Pods are replaced.<br><br>
-**Load Balancing:**<br><br>
+**Load Balancing:**<br>
 &emsp;•&emsp;Services automatically distribute traffic to the backend Pods using `kube-proxy` (via iptables or IPVS).<br><br>
-**Service Selector:**<br><br>
+**Service Selector:**<br>
 &emsp;•&emsp;The Service selects which Pods to send traffic to using labels. For example, `app=nginx`.<br><br>
 **Service Types** <br><br>
 ![ServiceTypes Diagram](images/ServiceTypes.jpg)<br>
@@ -388,15 +388,14 @@ spec:
   ports:
   - port: 80
   ```
-
-*** Practical Troubleshooting Commands: Service ***<br>
+**Practical Troubleshooting Commands: Service**<br>
 Service Issues:<br>
 ```hcl
     kubectl get endpoints my-service
     kubectl describe svc my-service
     kubectl logs -n kube-system <kube-proxy-pod>
 ```
-*** Practical Troubleshooting Commands: Pod Networking Troubleshooting *** <br>
+**Practical Troubleshooting Commands: Pod Networking Troubleshooting** <br>
 Pod Troubleshoot:<br>
 ```hcl
     kubectl get pod my-pod -o wide

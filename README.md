@@ -123,7 +123,7 @@ kubernetes_node:
               protocol: "HTTP"
               description: "Sends GET / requests over the loopback interface"
 ```
-> 📌 NOTE:The BusyBox sidecar continuously sends traffic to the Nginx container using `localhost:80.` <br>
+> 📌 NOTE:The BusyBox sidecar continuously sends traffic to the Nginx container using `localhost:80.` <br><br>
 ![Name Space shared Infra Diagram](images/Container2ContainerNetwork.jpg)
 Explanation: <br>
 Inside every Kubernetes Pod, and on the host node, you will find several key network interfaces. Each one has a specific purpose in how Pods communicate internally and externally.<br>
@@ -268,7 +268,7 @@ A faster, more scalable alternative to iptables for kube-proxy.<br><br>
 &emsp;•&emsp;More efficient for large clusters with many Services and Endpoints.<br>
 &emsp;•&emsp;Supports health checking and connection persistence.<br><br>
 Think of `IPVS` as a purpose-built, kernel-level load balancer:<br>
-&emsp;•&emsp;Fast lookups, smarter algorithms, and far more efficient than traversing thousands of iptables rules.<br>
+&emsp;•&emsp;Fast lookups, smarter algorithms, and far more efficient than traversing thousands of iptables rules.<br> <br>
 &emsp;**Summary Diagram** <br>
 ```hcl
 Container(s) inside Pod
@@ -296,7 +296,7 @@ Because Pods are ephemeral, Services provide a stable virtual IP (ClusterIP).<br
 &emsp;2.&emsp;Traffic is sent to the ClusterIP.<br>
 &emsp;3.&emsp;kube-proxy intercepts and rewrites the packet to a real Pod IP.<br>
 &emsp;4.&emsp;The packet reaches the backend Pod.<br>
-&emsp;5.&emsp;Response is returned transparently.<br>
+&emsp;5.&emsp;Response is returned transparently.<br><br>
 Summary Diagram <br>
 ```hcl
 Client Pod
@@ -309,7 +309,7 @@ Client Pod
                      ↕
            Backend Pod(s) (real Pod IPs)
 ```
-This keeps Pod-to-Service communication simple for applications: Pods just use a single, stable IP, while kube-proxy handles the routing and load balancing behind the scenes.<br>
+This keeps Pod-to-Service communication simple for applications: Pods just use a single, stable IP, while kube-proxy handles the routing and load balancing behind the scenes.<br><br>
 Example:<br>
 ```hcl
 # ---------------------------
@@ -330,3 +330,89 @@ spec:
   type: ClusterIP
   clusterIP: 10.96.0.100
 ```
+
+**6.&emsp;Kubernetes Services**<br><br>
+Here is the right moment to discuss Kubernetes Services in more detail.<br><br>
+A Service in Kubernetes is an abstraction that defines a logical set of Pods and a policy to access them. It provides a stable network endpoint (IP and DNS name) for Pods that may come and go.<br><br>
+Pods in Kubernetes are ephemeral — they can be created, destroyed, or replaced. Their IP addresses change dynamically. Services solve this by giving a consistent way to access Pods.<br><br>
+![services Diagram](images/services.jpg)<br>
+Service types define how the service is exposed, as detailed in the official Kubernetes Service documentation.<br><br>
+Explanation:<br>
+&emsp;•&emsp;Service is an API resource: It exists in the Kubernetes API as a definable object that you can `kubectl apply, `kubectl get`, or manage via the API server.<br><br>
+&emsp;•&emsp;Service is also an object: When created, it becomes an actual object in etcd, and the Kubernetes control plane manages its lifecycle.<br><br>
+So you can think of it as an API resource that represents a Service object in the cluster.<br><br>
+&emsp;`kubectl get service my-service` <br>
+Here service is the API resource type, and my-service is the object instance.<br><br>
+📌 *Summary: Service = API resource type + object instance.* <br>
+
+Service yaml code:<br>
+```hcl
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  selector:
+    app: my-app
+  ports:
+    - protocol: TCP
+      port: 80        # Service port
+      targetPort: 8080 # Pod port
+  type: ClusterIP
+```
+**Stable Cluster IP — ClusterIP:**<br>
+
+&emsp;•&emsp;Each Service gets a fixed IP (ClusterIP) inside the cluster, which does not change, even if Pods are replaced.<br><br>
+**Load Balancing:**<br><br>
+&emsp;•&emsp;Services automatically distribute traffic to the backend Pods using `kube-proxy` (via iptables or IPVS).<br><br>
+**Service Selector:**<br><br>
+&emsp;•&emsp;The Service selects which Pods to send traffic to using labels. For example, `app=nginx`.<br><br>
+**Service Types** <br><br>
+![ServiceTypes Diagram](images/ServiceTypes.jpg)<br>
+There are several types of Services, each suited for different use cases:<br><br>
+&emsp;•&emsp;`ClusterIP:` Exposes the Service on an internal IP within the cluster. This is the default type and is used for communication between services within the cluster.<br>
+&emsp;•&emsp;`NodePort:` Exposes the Service on each node’s IP at a static port. This allows external traffic to access the Service.<br>
+&emsp;•&emsp;`LoadBalancer:` Exposes the Service externally using a cloud provider’s load balancer.<br>
+&emsp;•&emsp;`ExternalName/External Service:` Maps the Service to the contents of the externalName field (e.g., my-app.example.com), allowing you to proxy to an external service.<br><br>
+Use the right Service type<br><br>
+`externalTrafficPolicy:` Local to preserve source IP and reduce hops:<br>
+```hcl
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  externalTrafficPolicy: Local
+  selector:
+    app: my-app
+  ports:
+  - port: 80
+  ```
+
+*** Practical Troubleshooting Commands: Service ***<br>
+Service Issues:<br>
+```hcl
+    kubectl get endpoints my-service
+    kubectl describe svc my-service
+    kubectl logs -n kube-system <kube-proxy-pod>
+```
+*** Practical Troubleshooting Commands: Pod Networking Troubleshooting *** <br>
+Pod Troubleshoot:<br>
+```hcl
+    kubectl get pod my-pod -o wide
+    kubectl exec pod-a -- ping <pod-b-ip>
+    kubectl exec pod-a -- nslookup my-service
+    kubectl exec my-pod -- ip addr
+```
+Pod Cannot Reach Service: <br>
+```hcl
+    kubectl get svc my-service
+    kubectl get endpoints my-service
+    kubectl get pods -l app=my-app
+    kubectl describe svc my-service
+```
+Most common causes:<br>
+
+&emsp;•&emsp;Service selector mismatch<br>
+&emsp;•&emsp;Pods not Ready<br>
+&emsp;•&emsp;kube-proxy misconfiguration<br>

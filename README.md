@@ -425,7 +425,8 @@ In Kubernetes, there are four main ways an external client can reach a Pod:
 | NodePort | Any TCP/UDP | Node IP + port |	Simple, static port |
 | LoadBalancer | Any TCP/UDP | Cloud LB IP | Production-ready, scalable |
 | Ingress | HTTP/HTTPS | Hostname/IP | Path-based routing, TLS |
-| Port Forwarding | Any TCP (local) | Localhost only | Debugging, temporary|
+| Port Forwarding | Any TCP (local) | Localhost only | Debugging, temporary |
+
 **NodePort / LoadBalancer (Any TCP/UDP)**<br>
 Kubernetes exposes Pods to external clients through Services. The two main types of external traffic are NodePort and LoadBalancer, both supporting any TCP/UDP traffic:<br>
 ```hcl

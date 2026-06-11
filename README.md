@@ -1,10 +1,20 @@
-# Kubernetes Architecture
-===================================================================== <br>
+# Kubernetes Architecture <br>
 ![Acrhitecture Diagram](Architecture.jpg)
+**Core Architecture Components Explained** <br>
+**1.&emsp; Control Plane (Master Node) Components**<br>
+•&emsp;`kube-apiserver:` The front end for the control plane. It processes all inner and outer requests, intercepts traffic, and verifies permissions before modifying the cluster state. <br>
+•&emsp;`etcd:` A highly available, secure, and distributed key-value store. It serves as Kubernetes' backup database, holding all configuration data and current state logs. <br>
+•&emsp;`kube-scheduler:` The routing brain. It watches for newly created pods that have no assigned node and selects the healthiest physical worker node for them based on CPU, memory, and policy constraints.<br>
+•&emsp;`kube-controller-manager:` The operator loop. It runs daemon controllers that constantly track the cluster status (e.g., Node Controller, Job Controller, Deployment Controller) and works to bring the current state closer to your desired state. <br>
+•&emsp;`cloud-controller-manager (CCM):` The abstraction layer that decouples your internal cluster logic from external cloud platform services, auto-provisioning physical infrastructure assets like cloud-provider storage volumes or load balancers. <br>
+**2. Worker Node Components** <br>
+•&emsp;`kubelet:` An agent that runs on every single worker node in the cluster. It registers the node with the master control plane and ensures that the specific containers described in PodSpecs are up, healthy, and running.<br>
+•&emsp;`kube-proxy:` A network agent running on each node that maintains network rules on host operating systems. It allows network communication to your pods from inside or outside the cluster.<br>
+•&emsp;`Container Runtime:` The underlying software engine responsible for actually running the isolated container processes (e.g., containerd, CRI-O, or Docker Engine).<br>
 # Master Node <br>
 ![MasterNode Diagram](MasterNode.jpg)
 **Control Plane Roles Relative to Namespaces** <br>
-•&emsp;`kube-apiserver:` The absolute gatekeeper. Every single kubectl request passes here first. When you query a specific namespace, it evaluates your authorization permissions against that unique logical boundary before processing the request.<br>
+•&emsp;`kube-apiserver:` The absolute gatekeeper. Every single `kubectl` request passes here first. When you query a specific namespace, it evaluates your authorization permissions against that unique logical boundary before processing the request.<br>
 •&emsp;`etcd:` The single source of truth database. It holds the ultimate structural state configuration for the entire system, mapping exactly which namespace tag belongs to each individual resource definition.<br>
 •&emsp;`kube-scheduler:` The matchmaker. It scans for newly configured workloads via the API server and assigns them to an open Data Node based on hardware capacity. The scheduler does not isolate workloads physically by namespace unless you explicitly command it to via affinity policies.<br>
 •&emsp;`kube-controller-manager:` The core driver loop. It continuously compares your cluster's current running state against your desired configuration (e.g., ensuring 3 replicas of a production pod remain functional). It operates globally but processes resources namespace-by-namespace. <br>
@@ -50,7 +60,6 @@ spec:
 ```
 # Name Space <br>
 ![Name Space Diagram](NameSpace1.jpg)
-![Name Space Diagram](NameSpace1.jpg)
 # NameSpace Shared Infra <br>
 ![Name Space shared Infra Diagram](NameSpace_SharedInfra.jpg)
-![Name Space shared Infra Diagram](NameSpace_SharedInfra1.jpg)
+![Name Space shared Infra Diagram](NameSpace_SharedInfra2.jpg)

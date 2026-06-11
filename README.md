@@ -555,7 +555,7 @@ However, it is *feature-frozen*, meaning no new capabilities will be added, and 
 ![Ingress_ControllersVsGateWayAPI Diagram](images/Ingress_ControllersVsGateWayAPI.jpg)<br><br>
 📌 Ingress is simple but limited and vendor-fragmented. Gateway API is modular, powerful, cloud-native, and a long-term replacement. <br>
 | Feature | Ingress API | Gateway API |
-| :--- | :--- | :--- | :--- |
+| :--- | :--- | :--- |
 | Primary Resource | Ingress | GatewayClass, Gateway, HTTPRoute |
 | Design Model | Single resource mixing rules + entrypoint | Modular, decoupled architecture |
 | Extensibility | Limited; relies on annotations | Rich, native extension points |
@@ -568,7 +568,6 @@ However, it is *feature-frozen*, meaning no new capabilities will be added, and 
 
 **8. Communication Type: Pod-to-External (Egress)** <br><br>
 Allows containers inside Pods to reach resources outside the cluster (e.g., APIs, databases, websites).<br><br>
-
 📌 Egress (outgoing traffic) — Who is this Pod allowed to talk to? <br>
 ![Pod_To_External(Egress) Diagram](images/Pod_To_External(Egress).jpg) <br>
 **How Egress works*-* <br><br>
@@ -614,16 +613,16 @@ CNI Overlay<br>
 **Native CNI Plugins (Open-Source / Self-managed)** <br><br>
 These are typical OSS networking implementations that run entirely inside the cluster.<br>
 ![K8sNative(OSS)CLI_Plugins Diagram](images/K8sNative(OSS)CLI_Plugins.jpg) <br><br>
-**Calico:**<br><br>
+**Calico:**<br>
 &emsp;•&emsp;Layer 3 routing with BGP<br>
 &emsp;•&emsp;Most advanced NetworkPolicy support<br>
 &emsp;•&emsp;Overlay & non-overlay modes<br>
 &emsp;•&emsp;Great for large clusters<br><br>
-**Flannel:**<br><br>
+**Flannel:**<br>
 &emsp;•&emsp;Simple and popular for learning<br>
 &emsp;•&emsp;VXLAN or host-gw backends<br>
 &emsp;•&emsp;Limited policy support<br><br>
-**Cilium:**<br><br>
+**Cilium:**<br>
 &emsp;•&emsp;eBPF-powered networking<br>
 &emsp;•&emsp;L3–L7 observability and security<br>
 &emsp;•&emsp;Service mesh features built in<br>
@@ -648,7 +647,7 @@ These CNIs are built into cloud platforms like AWS, Azure, GCP, and integrate de
 Kubernetes uses CoreDNS for service discovery and service mesh integration. CoreDNS is the default DNS server since K8s 1.13<br><br>
 &emsp;•&emsp;Service DNS: `<service-name>.<namespace>.svc.cluster.local` <br>
 &emsp;•&emsp;Pod DNS (optional): `<pod-ip-with-dashes>.<namespace>.pod.cluster.local`<br><br>
-**Key points:**<br><br>
+**Key points:**<br>
 &emsp;•&emsp;Pod-to-Service resolution uses virtual IPs<br>
 &emsp;•&emsp;Headless services allow direct Pod-to-Pod communication<br>
 &emsp;•&emsp;kube-dns service name kept for compatibility<br>
@@ -685,7 +684,7 @@ Often caused by:<br>
 **11. Network Policies: Securing Pod Communication** <br><br>
 Kubernetes Network Policies are firewall rules for Pods.<br>
 &emsp;•&emsp;They define which Pods or external sources are allowed to talk to each other over the network. Without them, everything can talk to everything inside the cluster — wide open.<br><br>
-Network Policies let you change that by expressing rules like:<br><br>
+Network Policies let you change that by expressing rules like:<br>
 &emsp;•&emsp;“Only backend Pods may access the database.”<br>
 &emsp;•&emsp;“Deny all external traffic except to the frontend.”<br>
 &emsp;•&emsp;“Allow backend to send traffic to database, but not the other way around.”<br>
@@ -694,7 +693,7 @@ Network Policies let you change that by expressing rules like:<br><br>
 &emsp;•&emsp;Network Policies enforce zero-trust networking inside a Kubernetes cluster.<br>
 &emsp;•&emsp;The CNI plugin programs the OS-level firewall (iptables, eBPF, nftables, etc.). They rely on the CNI plugin (Calico, Cilium, Azure CNI, etc.) to apply the actual rules on the node.<br><br>
 ![K8s_Network_Policies Diagram](images/K8s_Network_Policies.jpg) <br><br>
-Network policy YAML, stored on API server:<br><br>
+Network policy YAML, stored on API server:<br>
 ```hcl
 # -----------------------------
 # Namespace: frontend
@@ -831,11 +830,11 @@ NetworkPolicy Blocking Traffic:<br>
     kubectl get pods --show-labels  
 ```
 **12. Kubernetes End-to-End Traffic Flow**<br><br>
-&emsp;**Request flow from client to Pod and back** <br>
+&emsp;**Request flow from client to Pod and back** <br><br>
 Here’s a short overview explaining how end-to-end traffic flows in a Kubernetes cluster, from the client request all the way to the Pod and back.<br><br>
 ![K8s_end_to_End_Traffic_Flow Diagram](images/K8s_end_to_End_Traffic_Flow.jpg) <br><br>
 &emsp;1.&emsp; DNS resolution:<br>
-&emsp;&emsp;`myapp.com resolves to a public IP`.
+&emsp;&emsp;`myapp.com resolves to a public IP`. <br>
 &emsp;2.&emsp; Cloud Load Balancer:<br>
 &emsp;.&emsp;The public IP belongs to a cloud load balancer (e.g., Azure Load Balancer) created by a Service of type LoadBalancer.<br>
 &emsp;.&emsp;The LB forwards incoming traffic to the Ingress Controller Pods running in the cluster.
@@ -844,7 +843,7 @@ Health probes ensure traffic is only sent to healthy nodes running the Ingress C
 &emsp;.&emsp;The Ingress Controller inspects the HTTP(S) request, matches it against Ingress rules (host/path), and determines the target Kubernetes Service.<br><br>
 &emsp;4.&emsp; Service-to-Pod routing:<br>
 The Ingress Controller forwards traffic to the target Service.<br>
-> Optional nuance:
+> Optional nuance:<br>
 &emsp;.&emsp;kube-proxy on the nodes usually handles routing traffic from the Service to one of its Pods.<br>
 &emsp;However, some Ingress Controller implementations can bypass kube-proxy and directly reach Pod endpoints (e.g., via IPVS mode or direct endpoint resolution), improving efficiency.<br><br>
 5. Pod processing:<br>

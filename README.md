@@ -797,7 +797,7 @@ This policy:<br>
 
 &emsp;•&emsp;🚫 Deny external → database: `deny-external-to-database NetworkPolicy`<br>
 &emsp;•&emsp;✅ Allow external → frontend: `allow-ingress-to-frontend`<br>
-&emsp;•&emsp;🔁 Allow backend ↔ database: Two policies: `backend-allow-db + backend-allow-ingress-from-db`
+&emsp;•&emsp;🔁 Allow backend ↔ database: Two policies: `backend-allow-db + backend-allow-ingress-from-db`<br>
 &emsp;•&emsp;Namespaces labeled frontend, backend, databaseNamespace objects<br><br>
 **How You Define Traffic Rules**<br><br>
 Policies select two things:<br><br>
@@ -843,7 +843,7 @@ Health probes ensure traffic is only sent to healthy nodes running the Ingress C
 &emsp;.&emsp;The Ingress Controller inspects the HTTP(S) request, matches it against Ingress rules (host/path), and determines the target Kubernetes Service.<br><br>
 &emsp;4.&emsp; Service-to-Pod routing:<br>
 The Ingress Controller forwards traffic to the target Service.<br>
-> Optional nuance:<br>
+>> Optional nuance:<br>
 &emsp;.&emsp;kube-proxy on the nodes usually handles routing traffic from the Service to one of its Pods.<br>
 &emsp;However, some Ingress Controller implementations can bypass kube-proxy and directly reach Pod endpoints (e.g., via IPVS mode or direct endpoint resolution), improving efficiency.<br><br>
 5. Pod processing:<br>

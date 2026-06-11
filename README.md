@@ -123,4 +123,17 @@ kubernetes_node:
               protocol: "HTTP"
               description: "Sends GET / requests over the loopback interface"
 ```
-The BusyBox sidecar continuously sends traffic to the Nginx container using `localhost:80.`
+The BusyBox sidecar continuously sends traffic to the Nginx container using `localhost:80.` <br>
+![Name Space shared Infra Diagram](images/Container2ContainerNetwork.jpg)
+Explanation <br>
+Inside every Kubernetes Pod, and on the host node, you will find several key network interfaces. Each one has a specific purpose in how Pods communicate internally and externally.<br>
+
+Below is an explanation of each:<br>
+
+>> Loopback Interface (lo)<br>
+
+The loopback interface is a virtual network interface inside the Pod.<br>
+
+•&emsp;Allows containers inside the Pod to communicate using localhost (127.0.0.1)<br>
+•&emsp;Used for container-to-container communication within the same Pod<br>
+•&emsp;Exists in every Linux network namespace<br>
